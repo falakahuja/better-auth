@@ -14,6 +14,7 @@ describe("session-refresh", () => {
 	});
 
 	afterEach(() => {
+		vi.unstubAllGlobals();
 		vi.useRealTimers();
 		vi.restoreAllMocks();
 		delete (globalThis as any)[Symbol.for("better-auth:broadcast-channel")];
@@ -347,5 +348,24 @@ describe("session-refresh", () => {
 		expect(mockFetchSession).toHaveBeenCalledTimes(1);
 
 		secondManager.cleanup();
+	});
+
+	/**
+	 * @see https://github.com/better-auth/better-auth/issues/11389
+	 */
+	it("cleans up after the DOM globals are torn down", () => {
+		const manager = createSessionRefreshManager({
+			fetchSession: vi.fn(async () => {}),
+			sessionSignal: atom(false),
+		});
+		manager.init();
+
+		// Test environments such as happy-dom remove these globals on teardown.
+		vi.stubGlobal("window", undefined);
+		vi.stubGlobal("document", undefined);
+		Reflect.deleteProperty(globalThis, "window");
+		Reflect.deleteProperty(globalThis, "document");
+
+		expect(() => manager.cleanup()).not.toThrow();
 	});
 });
