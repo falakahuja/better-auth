@@ -10,7 +10,10 @@ import { safeJSONParse } from "../../utils/json";
 import { getAuthTables } from "../get-tables";
 import { createAtomicFallbacks } from "./atomic-fallback";
 import { initGetDefaultFieldName } from "./get-default-field-name";
-import { initGetDefaultModelName } from "./get-default-model-name";
+import {
+	initFindDefaultModelName,
+	initGetDefaultModelName,
+} from "./get-default-model-name";
 import { initGetFieldAttributes } from "./get-field-attributes";
 import { initGetFieldName } from "./get-field-name";
 import { initGetIdField } from "./get-id-field";
@@ -159,6 +162,11 @@ export const createAdapterFactory =
 		const logger = createLogger(options.logger);
 
 		const getDefaultModelName = initGetDefaultModelName({
+			usePlural: config.usePlural,
+			schema,
+		});
+
+		const findDefaultModelName = initFindDefaultModelName({
 			usePlural: config.usePlural,
 			schema,
 		});
@@ -641,12 +649,13 @@ export const createAdapterFactory =
 				const defaultBaseModelName = getDefaultModelName(baseModel);
 
 				// First, check if the joined model has FKs to the base model (forward join)
+				// `references.model` may name an app table outside the schema, which never matches
 				let foreignKeys = Object.entries(
 					schema[defaultModelName]!.fields,
 				).filter(
 					([field, fieldAttributes]) =>
 						fieldAttributes.references &&
-						getDefaultModelName(fieldAttributes.references.model) ===
+						findDefaultModelName(fieldAttributes.references.model) ===
 							defaultBaseModelName,
 				);
 
@@ -659,7 +668,7 @@ export const createAdapterFactory =
 					).filter(
 						([field, fieldAttributes]) =>
 							fieldAttributes.references &&
-							getDefaultModelName(fieldAttributes.references.model) ===
+							findDefaultModelName(fieldAttributes.references.model) ===
 								defaultModelName,
 					);
 					isForwardJoin = false;
