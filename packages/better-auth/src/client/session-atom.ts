@@ -268,13 +268,12 @@ export function getSessionAtom(
 	) => void = () => {};
 
 	onMount(session, () => {
-		let timeoutId: ReturnType<typeof setTimeout> | undefined;
+		// SSR never unmounts, so global refresh listeners would pile up per request.
+		if (isServer()) return;
 
-		if (!isServer()) {
-			timeoutId = setTimeout(() => {
-				void fetchSessionOnMount();
-			}, 0);
-		}
+		const timeoutId = setTimeout(() => {
+			void fetchSessionOnMount();
+		}, 0);
 
 		const refreshManager = createSessionRefreshManager({
 			fetchSession,
@@ -286,7 +285,7 @@ export function getSessionAtom(
 		broadcastSessionUpdate = refreshManager.broadcastSessionUpdate;
 
 		return () => {
-			if (timeoutId) clearTimeout(timeoutId);
+			clearTimeout(timeoutId);
 			refreshManager.cleanup();
 		};
 	});
