@@ -1,5 +1,11 @@
 # @better-auth/prisma-adapter
 
+## 1.7.20
+
+### Patch Changes
+
+- [#11806](https://github.com/better-auth/better-auth/pull/11806) [`e9b43d7`](https://github.com/better-auth/better-auth/commit/e9b43d7149cec0b52e8194b1341e582d0ea19bba) Thanks [@gustavovalverde](https://github.com/gustavovalverde)! - With `provider: "mongodb"`, queries that look for an empty optional field now also match records where that field was never written. Before, they matched only fields explicitly stored as `null`. Better Auth leaves optional fields out of new records, so these lookups often found nothing. This could break flows such as refresh-token rotation in the OAuth provider (`invalid_grant`), device-code approval, SCIM account linking, and API key rate-limit windows. No action is needed. Other Prisma providers are unaffected.
+
 ## 1.7.19
 
 ## 1.7.18
